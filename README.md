@@ -17,10 +17,10 @@
 
 Para compilar el entorno y ejecutar los scripts basados en LuaJIT FFI en WSL (Ubuntu/Debian), necesitas instalar los siguientes paquetes del sistema:
 
-`bash
+```bash
 sudo apt update
 sudo apt install -y build-essential luajit libluajit-5.1-dev libsqlite3-dev sqlite3
-`
+```
 
 ---
 
