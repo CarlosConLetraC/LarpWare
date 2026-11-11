@@ -1,0 +1,183 @@
+#!/usr/bin/env luajit
+
+local sqlite = require("sqlite")
+local json = require("json")
+local mpr_path = "/mnt/c/Users/pc/Mendix/LarpWare/LarpWare.mpr"
+
+local LarpGit = {}
+
+function LarpGit.status()
+    local db = sqlite.open(mpr_path)
+    print("[LARPGIT STATUS] Analizando metadatos del archivo .mpr...")
+    local tables = db:query("SELECT name FROM sqlite_master WHERE type='table';")
+    for _, row in ipairs(tables) do
+        print(" -> Tabla interna Mendix: " .. tostring(row.name))
+    end
+    db:close()
+end
+
+function LarpGit.dump(output_file)
+    output_file = output_file or "mpr_full_dump.json"
+    local db = sqlite.open(mpr_path)
+    print(string.format("[LARPGIT DUMP] Extrayendo base de datos y esquemas a %s...", output_file))
+    
+    local tables = db:query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
+    local full_db_data = {}
+    
+    for _, t in ipairs(tables) do
+        local tname = t.name
+        print(string.format(" -> Analizando y extrayendo tabla: %s", tname))
+        
+        -- Obtener estructura y filas
+        local tinfo = db:get_table_info(tname)
+        local rows = db:query(string.format("SELECT * FROM [%s];", tname))
+        
+        full_db_data[tname] = {
+            schema = tinfo.columns,
+            pkeys = tinfo.pkeys,
+            rows = rows
+        }
+    end
+    
+    db:close()
+    
+    local file = io.open(output_file, "w")
+    if file then
+        file:write(json.encode(full_db_data))
+        file:close()
+        print(string.format("[LARPGIT DUMP] ¡Volcado estructural exitoso! Archivo: %s", output_file))
+    else
+        print("[LARPGIT ERROR] No se pudo abrir el archivo de salida.")
+    end
+end
+
+function LarpGit.sync(input_file)
+    input_file = input_file or "mpr_full_dump.json"
+    print(string.format("[LARPGIT SYNC] Sincronizando inteligentemente desde %s al .mpr...", input_file))
+    
+    local file = io.open(input_file, "r")
+    if not file then
+        print(string.format("[LARPGIT ERROR] No se pudo abrir el archivo: %s", input_file))
+        return
+    end
+    
+    local content = file:read("*all")
+    file:close()
+    
+    local db_data, err = json.decode(content)
+    if not db_data then
+        print(string.format("[LARPGIT ERROR] Falló al decodificar el JSON: %s", tostring(err)))
+        return
+    end
+    
+    local db = sqlite.open(mpr_path)
+    db:exec("BEGIN TRANSACTION;")
+    
+    local success, err_msg = pcall(function()
+        for tname, tdata in pairs(db_data) do
+            print(string.format(" -> Aplicando Upsert en tabla: %s", tname))
+            
+            local schema = tdata.schema
+            local pkeys = tdata.pkeys
+            local rows = tdata.rows
+            
+            for _, row in ipairs(rows) do
+                local cols = {}
+                local vals = {}
+                local update_set = {}
+                
+                -- Validación defensiva: Si la tabla es 'Unit', exigimos que tenga un UnitID válido de 32 chars hex (16 bytes)
+                local skip_row = false
+                if tname == "Unit" then
+                    local uid = row["UnitID"]
+                    if not uid or type(uid) ~= "string" or #uid ~= 32 then
+                        skip_row = true -- Ignoramos registros huérfanos o malformados para evitar romper la BD
+                    end
+                end
+                
+                if not skip_row then
+                    -- Preparar valores y tipos
+                    for col_name, meta in pairs(schema) do
+                        local val = row[col_name]
+                        
+                        -- 1. Manejo específico para columnas BLOB (ej. UnitID, ContainerID)
+                        if meta.type == "BLOB" and type(val) == "string" and #val == 32 then
+                            table.insert(cols, string.format("[%s]", col_name))
+                            local formatted_val = string.format("X'%s'", val)
+                            table.insert(vals, formatted_val)
+                            
+                            local is_pk = false
+                            for _, pk in ipairs(pkeys) do if pk == col_name then is_pk = true break end end
+                            if not is_pk then
+                                table.insert(update_set, string.format("[%s] = %s", col_name, formatted_val))
+                            end
+                            
+                        -- 2. Manejo de valores normales presentes
+                        elseif val ~= nil then
+                            table.insert(cols, string.format("[%s]", col_name))
+                            local formatted_val
+                            if type(val) == "string" then
+                                formatted_val = string.format("'%s'", val:gsub("'", "''"))
+                            elseif type(val) == "boolean" then
+                                formatted_val = val and "1" or "0"
+                            else
+                                formatted_val = tostring(val)
+                            end
+                            table.insert(vals, formatted_val)
+                            
+                            local is_pk = false
+                            for _, pk in ipairs(pkeys) do if pk == col_name then is_pk = true break end end
+                            if not is_pk then
+                                table.insert(update_set, string.format("[%s] = %s", col_name, formatted_val))
+                            end
+                            
+                        -- 3. Manejo de campos NOT NULL que vengan en nil (para evitar restricciones rotas)
+                        elseif meta.notnull and meta.dflt_value == nil then
+                            table.insert(cols, string.format("[%s]", col_name))
+                            local formatted_val = meta.type:find("INT") and "0" or "''"
+                            table.insert(vals, formatted_val)
+                        end
+                    end
+                    
+                    -- Ejecutar UPSERT inteligente (INSERT OR REPLACE) si hay columnas válidas
+                    if #cols > 0 then
+                        local sql
+                        if #pkeys > 0 then
+                            sql = string.format("INSERT OR REPLACE INTO [%s] (%s) VALUES (%s);",
+                                tname, table.concat(cols, ", "), table.concat(vals, ", "))
+                        else
+                            sql = string.format("INSERT INTO [%s] (%s) VALUES (%s);",
+                                tname, table.concat(cols, ", "), table.concat(vals, ", "))
+                        end
+                        db:exec(sql)
+                    end
+                end
+            end
+        end
+    end)
+    
+    if success then
+        db:exec("COMMIT;")
+        print("[LARPGIT SYNC] ¡Sincronización estructural completada sin errores!")
+    else
+        db:exec("ROLLBACK;")
+        print(string.format("[LARPGIT ERROR] Sincronización fallida, rollback ejecutado: %s", tostring(err_msg)))
+    end
+    
+    db:close()
+end
+
+-- Mierda hardcodeada. Me da pereza parsear esto. Pero funciona. . .
+local args = {...}
+local comando = args[1]
+
+if comando == "status" then
+    LarpGit.status()
+elseif comando == "dump" then
+    LarpGit.dump(args[2])
+elseif comando == "sync" then
+    LarpGit.sync(args[2])
+    os.execute("sqlite3 LarpWare.mpr < clean_mpr.sql")
+else
+    print("Uso: ./bypass status | ./bypass dump [archivo.json] | ./bypass sync [archivo.json]")
+end

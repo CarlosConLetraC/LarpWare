@@ -1,0 +1,39 @@
+{
+  "module": "DarkKitchenCore",
+  "entities": [
+    {
+      "name": "Dish",
+      "attributes": [
+        {"name": "Name", "type": "String", "length": 100},
+        {"name": "Price", "type": "Decimal"},
+        {"name": "Category", "type": "Enum", "values": ["FastFood", "Sushi", "Gourmet", "Beverages"]},
+        {"name": "IsAvailable", "type": "Boolean"}
+      ]
+    },
+    {
+      "name": "Order",
+      "attributes": [
+        {"name": "OrderNumber", "type": "AutoNumber"},
+        {"name": "Status", "type": "Enum", "values": ["Pending", "Preparing", "Dispatched", "Completed"]},
+        {"name": "TotalAmount", "type": "Decimal"},
+        {"name": "OrderDate", "type": "DateTime"}
+      ]
+    },
+    {
+      "name": "Customer",
+      "attributes": [
+        {"name": "FullName", "type": "String", "length": 150},
+        {"name": "Phone", "type": "String", "length": 20},
+        {"name": "DeliveryAddress", "type": "String", "length": 250}
+      ]
+    },
+    {
+      "name": "InventoryItem",
+      "attributes": [
+        {"name": "ItemName", "type": "String", "length": 100},
+        {"name": "StockQuantity", "type": "Integer"},
+        {"name": "Unit", "type": "String", "length": 20}
+      ]
+    }
+  ]
+}

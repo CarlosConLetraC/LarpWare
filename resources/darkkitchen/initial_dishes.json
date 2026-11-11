@@ -1,0 +1,5 @@
+[
+  {"Name": "Burger Deluxe", "SalePrice": 12.50, "Category": "Hamburguesas", "IsAvailable": true},
+  {"Name": "Roll Salmón Acevichado", "SalePrice": 15.00, "Category": "Comida Asiática", "IsAvailable": true},
+  {"Name": "Costillas BBQ", "SalePrice": 22.00, "Category": "Gourmet", "IsAvailable": true}
+]

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<domainModel xmlns="http://www.mendix.com/domainmodel/1.0" name="DarkKitchen">
+    <entities>
+        <entity name="Brand">
+            <attributes>
+                <attribute name="Name" type="String" length="100" required="true"/>
+                <attribute name="IsActive" type="Boolean" defaultValue="true"/>
+            </attributes>
+        </entity>
+        <entity name="Category">
+            <attributes>
+                <attribute name="Name" type="String" length="80" required="true"/>
+            </attributes>
+        </entity>
+        <entity name="Product">
+            <attributes>
+                <attribute name="Name" type="String" length="120" required="true"/>
+                <attribute name="SalePrice" type="Decimal" precision="2" required="true"/>
+            </attributes>
+        </entity>
+        <entity name="Ingredient">
+            <attributes>
+                <attribute name="Name" type="String" length="100" required="true"/>
+                <attribute name="Unit" type="Enum" values="kg,gr,pieza"/>
+                <attribute name="CurrentStock" type="Decimal" precision="3" defaultValue="0.000"/>
+                <attribute name="MinStock" type="Decimal" precision="3" defaultValue="1.000"/>
+            </attributes>
+        </entity>
+        <entity name="Customer">
+            <attributes>
+                <attribute name="FullName" type="String" length="100" required="true"/>
+                <attribute name="Phone" type="String" length="20"/>
+                <attribute name="DeliveryAddress" type="String" length="255"/>
+            </attributes>
+        </entity>
+        <entity name="Order">
+            <attributes>
+                <attribute name="OrderNumber" type="AutoNumber"/>
+                <attribute name="OriginPlatform" type="Enum" values="UberEats,Rappi,DidiFood,WebPropia"/>
+                <attribute name="OrderDateTime" type="DateTime"/>
+                <attribute name="Status" type="Enum" values="Pendiente,EnPreparacion,EnCamino,Entregado,Cancelado" defaultValue="Pendiente"/>
+                <attribute name="Total" type="Decimal" precision="2"/>
+            </attributes>
+        </entity>
+    </entities>
+</domainModel>

@@ -1,0 +1,129 @@
+//
+// DISCLAIMER:
+// Do not change this file because it is core styling.
+// Customizing core files will make updating Atlas much more difficult in the future.
+// To customize any core styling, copy the part you want to customize to styles/web/sass/app/ so the core styling is overwritten.
+//
+
+@mixin navigation-tree() {
+    /* ==========================================================================
+       Navigation
+
+       Default Mendix navigation tree
+    ========================================================================== */
+    .mx-navigationtree {
+        /* Every navigation item */
+        .navbar-inner > ul {
+            margin: 0;
+            padding-left: 0;
+            background: var(--navigation-bg, var(--bar-secondary-bg));
+
+            & > li {
+                padding: 0;
+                border-style: none;
+
+                & > a {
+                    display: flex;
+                    align-items: center;
+                    height: var(--navigation-item-height);
+                    padding: var(--navigation-item-padding);
+                    color: var(--navigation-color, var(--font-color-default));
+                    text-shadow: none;
+                    font-size: var(--navigation-font-size);
+                    font-weight: var(--font-weight-normal);
+
+                    .caret {
+                        border-top-color: var(--navigation-color, var(--font-color-default));
+                        border-bottom-color: var(--navigation-color, var(--font-color-default));
+                    }
+
+                    img {
+                        width: 20px; // Default size
+                        height: auto;
+                        margin-right: 0.5em;
+                    }
+
+                    .glyphicon,
+                    .mx-icon-lined,
+                    .mx-icon-filled {
+                        top: 0;
+                        margin-right: 0.5em;
+                        vertical-align: middle;
+                        font-size: var(--navigation-glyph-size);
+                    }
+                }
+
+                a:hover,
+                a.active {
+                    text-decoration: none;
+                    color: var(--navigation-color-hover, var(--font-color-default));
+                    background: var(--navigation-bg-hover, var(--brand-default-100));
+
+                    .caret {
+                        border-top-color: var(--navigation-color-active, var(--brand-primary-900));
+                        border-bottom-color: var(--navigation-color-active, var(--brand-primary-900));
+                    }
+                }
+
+                a.active {
+                    color: var(--navigation-color-active, var(--brand-primary-900));
+                    border-left-color: var(--navigation-color-active, var(--brand-primary-900));
+                    background: var(--navigation-bg-active, var(--brand-primary-50));
+                }
+            }
+        }
+
+        /* Sub navigation item specific */
+        li.mx-navigationtree-has-items {
+            & > ul {
+                margin: 0;
+                padding-left: 0;
+
+                li {
+                    margin: 0;
+                    padding: 0;
+                    border: 0;
+
+                    a {
+                        // Sub items get their own padding so their label can line up with the
+                        // parent label (past the parent icon); falls back to the item padding.
+                        padding: var(--navigation-sub-item-padding, var(--navigation-item-padding));
+                        text-decoration: none;
+                        color: var(--navigation-sub-color, var(--navigation-color, var(--font-color-default)));
+                        border: 0;
+                        text-shadow: none;
+                        font-size: var(--navigation-sub-font-size);
+                        font-weight: var(--font-weight-normal);
+                        .glyphicon,
+                        .mx-icon-lined,
+                        .mx-icon-filled {
+                            margin-right: var(--spacing-small);
+                        }
+
+                        &:hover,
+                        &.active {
+                            color: var(--navigation-sub-color-hover, var(--navigation-color-hover, var(--font-color-default)));
+                        }
+                        &:focus-visible {
+                            @extend .focus-ring !optional;
+                        }
+
+                        &.active {
+                            color: var(--navigation-sub-color-active, var(--navigation-color-active, var(--brand-primary-900)));
+                            border: 0;
+                        }
+                    }
+                }
+            }
+
+            &:not(.mx-navigationtree-collapsed) {
+                border-radius: var(--navigation-border-radius);
+                background-color: var(--navigation-sub-bg, transparent);
+            }
+        }
+
+        &:focus-visible {
+            @extend .focus-ring !optional;
+        }
+    }
+}

@@ -1,0 +1,491 @@
+/* ==========================================================================
+   Atlas layout
+
+   Extra styling for responsive layouts
+========================================================================== */
+@mixin layout-atlas-responsive() {
+    :root {
+        --closed-sidebar-width: 0px;
+    }
+    
+    .layout-atlas {
+        .mx-scrollcontainer {
+            // Direct child: the outer (topbar) scroll container is never "open"
+            &:not(.mx-scrollcontainer-open) > .region-sidebar {
+                .mx-scrollcontainer-wrapper {
+                    transition: padding var(--navsidebar-animation-duration) var(--navsidebar-animation-function);
+                    --navsidebar-sub-bg-header: transparent;
+                    --navigation-sub-bg: transparent;
+                }
+            }
+            &.mx-scrollcontainer-open {
+                .region-sidebar {
+                    .mx-scrollcontainer-wrapper {
+                        padding-left: var(--navsidebar-spacing);
+                        padding-right: var(--navsidebar-spacing);
+                        transition: padding var(--navsidebar-animation-duration) var(--navsidebar-animation-function);
+                    }
+                }
+            }
+        }
+    }
+
+    .layout-atlas-responsive,
+    .layout-atlas-responsive-default,
+    .layout-atlas-responsive-sidebar,
+    .layout-atlas-responsive-topbar {
+        &:not(.layout-atlas-responsive-topbar) {
+            // hidden when closed for topbar layout
+            --closed-sidebar-width: var(--navsidebar-width-closed);
+        }
+        @media (min-width: $screen-md) {
+            .mx-scrollcontainer-shrink:not(.mx-scrollcontainer-open) > .region-sidebar,
+            .mx-scrollcontainer-push:not(.mx-scrollcontainer-open) > .region-sidebar,
+            .mx-scrollcontainer-slide:not(.mx-scrollcontainer-open) > .region-sidebar {
+                // Collapsed: top-level labels fade out (the text is a bare node, so the link colour carries the fade),
+                // icons and carets keep their state colours
+                .mx-scrollcontainer-wrapper .mx-navigationtree .navbar-inner > ul > li > a {
+                    color: transparent;
+                    transition: color var(--navsidebar-animation-duration) var(--navsidebar-animation-function);
+                }
+                @if (not $use-modern-client) {
+                    width: var(--closed-sidebar-width) !important;
+                }
+
+                .mx-scrollcontainer-wrapper .mx-navigationtree ul li {
+                    &.mx-navigationtree-has-items a {
+                        white-space: nowrap;
+                    }
+
+                    &.mx-navigationtree-has-items:focus-within > ul,
+                    &.mx-navigationtree-has-items:hover > ul {
+                        position: absolute;
+                        z-index: 100;
+                        top: var(--topbar-minimalheight);
+                        bottom: 0;
+                        left: var(--closed-sidebar-width);
+                        display: block;
+                        min-width: auto;
+                        padding: var(--spacing-small) 0;
+
+                        & > li.mx-navigationtree-has-items:focus-within > ul,
+                        & > li.mx-navigationtree-has-items:hover > ul {
+                            top: 0;
+                            left: 100%;
+                        }
+                    }
+
+                    &.mx-navigationtree-has-items,
+                    &.mx-navigationtree-collapsed {
+                        ul {
+                            display: none;
+                        }
+                    }
+
+                    & > a {
+                        .glyphicon,
+                        .mx-icon-lined,
+                        .mx-icon-filled {
+                            flex-basis: var(--closed-sidebar-width);
+                        }
+                    }
+                }
+            }
+
+            .widget-sidebar:not(.widget-sidebar-expanded) {
+                .mx-navigationtree ul li {
+                    &.mx-navigationtree-has-items:focus-within,
+                    &.mx-navigationtree-has-items:hover {
+                        ul {
+                            position: absolute;
+                            z-index: 100;
+                            top: 0;
+                            bottom: 0;
+                            left: var(--navsidebar-icon-width);
+                            display: block;
+                            overflow-y: auto;
+                            min-width: auto;
+                            padding: var(--spacing-small) 0;
+                        }
+                    }
+
+                    &.mx-navigationtree-has-items,
+                    .mx-navigationtree-collapsed {
+                        ul {
+                            display: none;
+                        }
+                    }
+                }
+            }
+        }
+
+        @if (not $use-modern-client) {
+            .mx-scrollcontainer-slide {
+                &:not(.mx-scrollcontainer-open) > .region-sidebar {
+                    overflow: hidden;
+                }
+
+                &.mx-scrollcontainer-open > .region-sidebar {
+                    width: var(--closed-sidebar-width) !important;
+
+                    & > .mx-scrollcontainer-wrapper {
+                        position: relative;
+                    }
+                }
+
+                .region-sidebar > .mx-scrollcontainer-wrapper {
+                    z-index: 2;
+                    left: calc(-1 * var(--closed-sidebar-width));
+                    background-color: inherit;
+                }
+            }
+
+            // Push aside for mobile
+            @media (max-width: $screen-sm-max) {
+                .mx-scrollcontainer-open:not(.mx-scrollcontainer-slide) {
+                    width: 1100px;
+                }
+
+                .mx-scrollcontainer-slide .toggle-btn {
+                    display: inline-block !important;
+                }
+            }
+        }
+
+        // Sidebar
+        .region-sidebar {
+            scrollbar-color: transparent transparent;
+            &:hover {
+                scrollbar-color: var(--navigation-scrollbar-color);
+            }
+
+            .toggle-btn {
+                width: var(--navsidebar-icon-width);
+                border-color: transparent;
+                border-radius: 0;
+                background: transparent;
+            }
+
+            .mx-scrollcontainer-wrapper {
+                .toggle-btn-wrapper {
+                    display: flex;
+                    padding: var(--spacing-small);
+                    align-items: center;
+                    min-height: calc(var(--topbar-minimalheight) + 4px);
+                    background: var(--navsidebar-sub-bg, transparent);
+                }
+
+                .toggle-btn {
+                    padding: var(--spacing-medium);
+
+                    img {
+                        width: 24px;
+                        height: 24px;
+                    }
+                }
+
+                .toggle-text {
+                    color: #fff;
+                    font-weight: bold;
+                }
+
+                .mx-navigationtree .navbar-inner > ul > li {
+                    & > a {
+                        height: var(--navsidebar-icon-height);
+                        padding: var(--spacing-small) 0;
+                        // labels fade out when the sidebar collapses (transition lives in the collapsed state, so
+                        // hover stays instant here); icons carry their own state colours and never fade
+                        transition: none;
+                        .glyphicon,
+                        .mx-icon-lined,
+                        .mx-icon-filled {
+                            color: var(--navsidebar-color, var(--navigation-color, var(--bar-color)));
+                        }
+                        &:hover .glyphicon,
+                        &:hover .mx-icon-lined,
+                        &:hover .mx-icon-filled {
+                            color: var(--navsidebar-color-hover, var(--navigation-color-hover, var(--bar-color-hover)));
+                        }
+                        &.active .glyphicon,
+                        &.active .mx-icon-lined,
+                        &.active .mx-icon-filled {
+                            color: var(--navsidebar-color-active, var(--navigation-color-active, var(--bar-color-active)));
+                        }
+                        //margin: var(--spacing-smaller) 0 0 0;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        border-radius: var(--navsidebar-border-radius);
+                        // Glyph icon
+                        .glyphicon,
+                        .mx-icon-lined,
+                        .mx-icon-filled {
+                            display: flex;
+                            align-items: center;
+                            flex-shrink: 0;
+                            justify-content: center;
+                            flex-basis: var(--navsidebar-icon-width);
+                            height: var(--navsidebar-icon-height);
+                            padding: var(--spacing-small) var(--spacing-medium);
+                            border-radius: var(--navsidebar-border-radius);
+                            transition: flex-basis var(--navsidebar-animation-duration) var(--navsidebar-animation-function);
+                        }
+                        img {
+                            width: var(--navsidebar-icon-width);
+                            padding: var(--spacing-small) var(--spacing-medium);
+                        }
+                        // No icon: keep the label in the same column as the other items
+                        &:not(:has(.glyphicon, .mx-icon-lined, .mx-icon-filled, img)) {
+                            padding-left: var(--navsidebar-label-indent);
+                        }
+                    }
+                    &.mx-navigationtree-has-items:not(.mx-navigationtree-collapsed) > a {
+                        border-radius: var(--navsidebar-border-radius) var(--navigation-border-radius) 0 0;
+                        background-color: var(--navsidebar-sub-bg-header, transparent);
+                    }
+                }
+            }
+        }
+    }
+
+    // Bar roles: Atlas_SideBar has the sidebar as its primary bar, with the top bar inside it as the secondary
+    // one. Atlas_Default and Atlas_TopBar have the top bar as their primary bar; in Atlas_Default the sidebar
+    // below it is the secondary one. (Atlas_TopBar's sidebar is the mobile menu, which keeps the primary role.)
+    .layout-atlas.layout-atlas-responsive-sidebar .region-topbar,
+    .layout-atlas.layout-atlas-responsive-default .region-sidebar {
+        @include bar-role(secondary);
+    }
+
+    // Language selector snippet: its text takes the bar's text colour in a bar (a theme's --topbar-color pins it in
+    // the top bar), the page text elsewhere. Its "Contrast" colour sits on the wrapper, so this rule on the combobox
+    // wins over it. (Not currentColor: in a custom property that resolves at the inner input, which is dark.)
+    .language-selector .widget-combobox {
+        --cb-text-color: var(--bar-color, var(--font-color-default));
+    }
+    .region-topbar .language-selector .widget-combobox {
+        --cb-text-color: var(--topbar-color, var(--bar-color, var(--font-color-default)));
+    }
+
+    .layout-atlas-responsive,
+    .layout-atlas-responsive-default,
+    .layout-atlas-responsive-sidebar {
+        // Topbar
+        .region-topbar {
+            padding: 0 var(--spacing-small);
+            color: var(--topbar-color, var(--bar-color));
+
+            .toggle-btn {
+                padding: 0;
+                color: var(--topbar-color, var(--bar-color));
+                border-color: transparent;
+                border-radius: 0;
+                background: transparent;
+                display: flex;
+            }
+
+            .mx-icon-filled,
+            .mx-icon-lined {
+                font-size: 18px;
+            }
+        }
+    }
+
+    // Topbar variant
+    .layout-atlas-responsive-topbar {
+        .region-topbar {
+            padding: 0 var(--spacing-medium);
+            @media (max-width: $screen-sm-max) {
+                padding: 0 var(--spacing-small);
+            }
+            .topbar-wrapper {
+                display: grid;
+                grid-template-columns: 1fr auto 1fr;
+                align-items: center;
+            }
+        }
+
+        .mx-scrollcontainer-slide {
+            &:not(.mx-scrollcontainer-open) > .region-sidebar {
+                overflow: hidden;
+            }
+
+            .region-sidebar {
+                z-index: 100;
+            }
+        }
+
+        @if (not $use-modern-client) {
+            .mx-scrollcontainer-slide {
+                &:not(.mx-scrollcontainer-open) > .region-sidebar {
+                    overflow: hidden;
+                }
+
+                &.mx-scrollcontainer-open > .region-sidebar {
+                    & > .mx-scrollcontainer-wrapper {
+                        position: relative;
+                        background: var(--sidebar-bg, var(--bar-bg));
+                        width: var(--navsidebar-width-open);
+                        z-index: 100;
+                    }
+                }
+            }
+
+            // Push aside for mobile
+            @media (max-width: $screen-sm-max) {
+                .mx-scrollcontainer-open:not(.mx-scrollcontainer-slide) {
+                    width: 1100px;
+                }
+
+                .mx-scrollcontainer-slide .toggle-btn {
+                    display: inline-block !important;
+                }
+            }
+        }
+    }
+
+    .layout-atlas-responsive-sidebar {
+        .sidebar-wrapper {
+            padding: var(--spacing-medium) 0 var(--spacing-medium) 0;
+            transition: padding var(--navsidebar-animation-duration) var(--navsidebar-animation-function);
+        }
+
+        .mx-scrollcontainer-shrink,
+        .mx-scrollcontainer-slide,
+        .mx-scrollcontainer-push {
+            .toggle-btn-sidebar {
+                width: var(--navsidebar-toggle-size);
+                height: var(--navsidebar-toggle-size);
+                border: 1px solid var(--border-color-default);
+                opacity: 0;
+                padding: 0;
+                overflow: hidden;
+                position: absolute;
+                background: var(--color-base);
+                border-radius: 100%;
+                // animate only the movement with the sidebar; hover colour, scale and shadow react instantly
+                transition: left var(--navsidebar-animation-duration) var(--navsidebar-animation-function),
+                    rotate var(--navsidebar-animation-duration) var(--navsidebar-animation-function),
+                    opacity var(--navsidebar-animation-duration) var(--navsidebar-animation-function);
+                color: var(--font-color-header);
+                top: 26px;
+                left: calc(var(--closed-sidebar-width) - var(--navsidebar-toggle-size) / 2);
+                .mx-icon-filled,
+                .mx-icon-lined {
+                    line-height: var(--line-height-base);
+                }
+                &:focus-visible {
+                    opacity: 1;
+                }
+            }
+
+            .region-sidebar:hover {
+                .toggle-btn-sidebar {
+                    opacity: 1;
+                    &:hover {
+                        background-color: var(--brand-primary);
+                        color: var(--font-color-contrast);
+                        transform: scale(1.1);
+                        box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.3);
+                    }
+                }
+            }
+
+            &.mx-scrollcontainer-open {
+                .toggle-btn-sidebar {
+                    left: calc(var(--sidebar-size, var(--navsidebar-width-open)) - var(--navsidebar-toggle-size) / 2);
+                    rotate: 180deg;
+                }
+                .sidebar-brand-logo {
+                    padding: 0 var(--spacing-small);
+                    transition: padding var(--navsidebar-animation-duration) var(--navsidebar-animation-function);
+                }
+                // App name next to the logo. The class goes on the element that holds only the name (the text
+                // widget, or a data view around the text alone), never on a wrapper that also holds the logo,
+                // because the collapsed state hides the whole element.
+                .sidebar-brand-name {
+                    display: block;
+                    flex: 1 1 auto;
+                    min-width: 0; // lets the flex item shrink below its content width
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    // the app name takes the title colour of the bar it sits in, the same in the sidebar and the top bar
+                    // (a light name on a dark sidebar, a dark one on a light sidebar)
+                    color: var(--navbar-brand-name, var(--bar-title-color));
+                    opacity: 1;
+                    // room left of the name: sidebar minus the icon column and the sidebar padding
+                    max-width: calc(var(--navsidebar-width-open) - var(--navsidebar-width-closed) - 2 * var(--navsidebar-spacing));
+                    // opening: width is back at once, the text fades in with the sidebar
+                    transition: opacity var(--navsidebar-animation-duration) var(--navsidebar-animation-function), max-width 0s;
+                    // long names end in an ellipsis instead of pushing the header apart
+                    .mx-dataview-content,
+                    .mx-text {
+                        display: block;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
+                    .mx-text {
+                        color: var(--navbar-brand-name, var(--bar-title-color));
+                    }
+                }
+            }
+            &:not(.mx-scrollcontainer-open) {
+                .sidebar-brand-logo {
+                    padding: 0 calc((var(--closed-sidebar-width) - var(--brand-logo-width)) / 2);
+                    transition: padding var(--navsidebar-animation-duration) var(--navsidebar-animation-function);
+                }
+                // Header row (logo and name) never wraps: at the collapsed width a wrapping row pushes the
+                // logo and the menu down
+                .sidebar-wrapper .flex-row {
+                    flex-wrap: nowrap;
+                }
+                // Collapsed: fade the name out with the sidebar, then give its space back. It stays on one line,
+                // or at zero width it wraps into a tall column that pushes the logo down.
+                .sidebar-brand-name {
+                    overflow: hidden;
+                    white-space: nowrap;
+                    color: var(--navbar-brand-name, var(--bar-title-color));
+                    max-width: 0;
+                    opacity: 0;
+                    pointer-events: none;
+                    // the width only goes once the fade is done (auto cannot be delayed, a pixel max-width can)
+                    transition: opacity var(--navsidebar-animation-duration) var(--navsidebar-animation-function), max-width 0s linear var(--navsidebar-animation-duration);
+                }
+            }
+
+            @media (max-width: $screen-sm-max) {
+                :not(&.mx-scrollcontainer-open) {
+                    .toggle-btn-sidebar-mobile {
+                        // shown only for mobile
+                        color: var(--brand-primary-800);
+                        background: transparent;
+                        border: 0;
+                    }
+                }
+            }
+        }
+
+        .widget-language-selector {
+            .current-language-text {
+                color: var(--topbar-color, var(--bar-color));
+            }
+            .language-arrow {
+                color: var(--topbar-color, var(--bar-color));
+                .arrow-image {
+                    filter: none;
+                }
+            }
+        }
+    }
+
+    // Fix Safari issue of sidebar disappearing
+    .profile-tablet {
+        .mx-scrollcontainer:not(.mx-scrollcontainer-open) > .region-sidebar {
+            overflow-y: hidden;
+
+            .mx-scrollcontainer-wrapper {
+                overflow: visible;
+            }
+        }
+    }
+}
